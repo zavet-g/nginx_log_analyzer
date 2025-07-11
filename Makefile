@@ -28,5 +28,17 @@ lint:
 	pre-commit run --all-files
 
 up:
-	docker compose up -d	
+	docker compose up -d
+
+monitor:
+	python apps/cli_commands.py monitor /var/log/nginx/access.log
+
+check-logs:
+	python apps/cli_commands.py check /var/log/nginx/access.log
+
+dashboard:
+	@echo "Откройте http://localhost:8000/static/index.html в браузере"
+
+dev:
+	uvicorn apps.main:app --host 0.0.0.0 --port 8000 --reload	
 

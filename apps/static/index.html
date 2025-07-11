@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nginx Log Analyzer - Дашборд</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-title {
+            font-size: 1.1rem;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .chart-container {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .chart-title {
+            font-size: 1.3rem;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .tables-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .table-container {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .table-title {
+            font-size: 1.3rem;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .refresh-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-bottom: 20px;
+            transition: background 0.3s ease;
+        }
+        
+        .refresh-btn:hover {
+            background: #5a6fd8;
+        }
+        
+        .loading {
+            text-align: center;
+            color: white;
+            font-size: 1.2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .tables-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Nginx Log Analyzer</h1>
+            <p>Мониторинг логов в реальном времени</p>
+        </div>
+        
+        <button class="refresh-btn" onclick="loadDashboard()">🔄 Обновить данные</button>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-title">Всего запросов</div>
+                <div class="stat-value" id="total-requests">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Общий трафик</div>
+                <div class="stat-value" id="total-traffic">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Уникальных IP</div>
+                <div class="stat-value" id="unique-ips">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Ошибок (4xx/5xx)</div>
+                <div class="stat-value" id="errors-count">-</div>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <div class="chart-title">Запросы по времени</div>
+            <canvas id="timeSeriesChart"></canvas>
+        </div>
+        
+        <div class="chart-container">
+            <div class="chart-title">Статус коды</div>
+            <canvas id="statusCodesChart"></canvas>
+        </div>
+        
+        <div class="tables-grid">
+            <div class="table-container">
+                <div class="table-title">Топ IP адресов</div>
+                <table id="top-ips-table">
+                    <thead>
+                        <tr>
+                            <th>IP адрес</th>
+                            <th>Запросы</th>
+                            <th>Средний размер</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            
+            <div class="table-container">
+                <div class="table-title">Топ URL</div>
+                <table id="top-urls-table">
+                    <thead>
+                        <tr>
+                            <th>URL</th>
+                            <th>Запросы</th>
+                            <th>Средний размер</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let timeSeriesChart, statusCodesChart;
+        
+        // Инициализация графиков
+        function initCharts() {
+            const timeCtx = document.getElementById('timeSeriesChart').getContext('2d');
+            timeSeriesChart = new Chart(timeCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Запросы',
+                        data: [],
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            
+            const statusCtx = document.getElementById('statusCodesChart').getContext('2d');
+            statusCodesChart = new Chart(statusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        data: [],
+                        backgroundColor: [
+                            '#4CAF50', '#8BC34A', '#CDDC39', '#FFEB3B',
+                            '#FF9800', '#FF5722', '#9C27B0', '#673AB7'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Загрузка данных
+        async function loadDashboard() {
+            try {
+                // Загружаем статистику трафика
+                const trafficResponse = await fetch('/api/analytics/traffic?hours=24');
+                const trafficData = await trafficResponse.json();
+                
+                document.getElementById('total-requests').textContent = trafficData.total_requests.toLocaleString();
+                document.getElementById('total-traffic').textContent = formatBytes(trafficData.total_bytes);
+                document.getElementById('unique-ips').textContent = trafficData.unique_ips.toLocaleString();
+                
+                // Загружаем ошибки
+                const errorsResponse = await fetch('/api/analytics/errors?hours=24');
+                const errorsData = await errorsResponse.json();
+                document.getElementById('errors-count').textContent = errorsData.length;
+                
+                // Загружаем временные ряды
+                const timeSeriesResponse = await fetch('/api/analytics/time-series?hours=24');
+                const timeSeriesData = await timeSeriesResponse.json();
+                
+                timeSeriesChart.data.labels = timeSeriesData.map(item => 
+                    new Date(item.timestamp).toLocaleTimeString()
+                );
+                timeSeriesChart.data.datasets[0].data = timeSeriesData.map(item => item.requests);
+                timeSeriesChart.update();
+                
+                // Загружаем статус коды
+                const statusCodesResponse = await fetch('/api/analytics/status-codes?hours=24');
+                const statusCodesData = await statusCodesResponse.json();
+                
+                statusCodesChart.data.labels = statusCodesData.map(item => `HTTP ${item.status}`);
+                statusCodesChart.data.datasets[0].data = statusCodesData.map(item => item.count);
+                statusCodesChart.update();
+                
+                // Загружаем топ IP
+                const topIPsResponse = await fetch('/api/analytics/top-ips?limit=10&hours=24');
+                const topIPsData = await topIPsResponse.json();
+                
+                const topIPsTable = document.querySelector('#top-ips-table tbody');
+                topIPsTable.innerHTML = topIPsData.map(item => `
+                    <tr>
+                        <td>${item.ip}</td>
+                        <td>${item.requests}</td>
+                        <td>${formatBytes(item.avg_size)}</td>
+                    </tr>
+                `).join('');
+                
+                // Загружаем топ URL
+                const topURLsResponse = await fetch('/api/analytics/top-urls?limit=10&hours=24');
+                const topURLsData = await topURLsResponse.json();
+                
+                const topURLsTable = document.querySelector('#top-urls-table tbody');
+                topURLsTable.innerHTML = topURLsData.map(item => `
+                    <tr>
+                        <td>${item.url}</td>
+                        <td>${item.requests}</td>
+                        <td>${formatBytes(item.avg_size)}</td>
+                    </tr>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Ошибка загрузки данных:', error);
+                alert('Ошибка загрузки данных. Проверьте консоль для деталей.');
+            }
+        }
+        
+        // Форматирование байтов
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            initCharts();
+            loadDashboard();
+            
+            // Автообновление каждые 30 секунд
+            setInterval(loadDashboard, 30000);
+        });
+    </script>
+</body>
+</html> 

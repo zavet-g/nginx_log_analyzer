@@ -10,6 +10,7 @@ import uvicorn
 
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
+from fastapi.staticfiles import StaticFiles
 from loguru import logger
 from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
@@ -64,6 +65,13 @@ def get_fastapi_app() -> FastAPI:
     )
     fast_api_app.include_router(api_router)
     fast_api_app.include_router(auth_router)
+    
+    # Подключаем статические файлы
+    try:
+        fast_api_app.mount("/static", StaticFiles(directory="apps/static"), name="static")
+    except Exception as e:
+        logger.warning(f"Не удалось подключить статические файлы: {e}")
+    
     return fast_api_app
 
 
