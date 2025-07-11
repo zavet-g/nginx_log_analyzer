@@ -4,7 +4,7 @@ from dotenv import find_dotenv
 from dotenv import load_dotenv
 from pydantic import AnyHttpUrl
 from pydantic import PostgresDsn
-from pydantic import ValidationError
+# Удаляем импорт ValidationError, так как он не нужен
 from pydantic import model_validator
 from pydantic_settings import BaseSettings
 
@@ -37,7 +37,7 @@ class Settings(BaseSettings):
             )
 
         if not sqlalchemy_db_uri:
-            raise ValidationError('Please fill Postgres settings in ENV')
+            raise ValueError('Please fill Postgres settings in ENV')
 
         sqlalchemy_db_uri = sqlalchemy_db_uri.replace('%', '%%')
         data.update({'SQLALCHEMY_DATABASE_URI': sqlalchemy_db_uri})

@@ -24,6 +24,27 @@ dump_migrations:
 test:
 	pytest -vv --maxfail=1 --cov=apps --cov-config .coveragerc
 
+test-unit:
+	pytest -vv --maxfail=1 --cov=apps --cov-config .coveragerc -m "not integration"
+
+test-integration:
+	pytest -vv --maxfail=1 --cov=apps --cov-config .coveragerc -m "integration"
+
+test-services:
+	pytest -vv --maxfail=1 --cov=apps --cov-config .coveragerc -m "services"
+
+test-handlers:
+	pytest -vv --maxfail=1 --cov=apps --cov-config .coveragerc -m "handlers"
+
+test-cli:
+	pytest -vv --maxfail=1 --cov=apps --cov-config .coveragerc -m "cli"
+
+test-schemas:
+	pytest -vv --maxfail=1 --cov=apps --cov-config .coveragerc -m "schemas"
+
+test-fast:
+	pytest -vv --maxfail=1 --cov=apps --cov-config .coveragerc -m "not slow and not integration"
+
 lint:
 	pre-commit run --all-files
 

@@ -128,10 +128,40 @@ python apps/cli_commands.py check /path/to/nginx/access.log
 
 ### 3. Тестирование
 
-Запустите тесты с Pytest:
-
+#### Запуск всех тестов:
 ```bash
 make test
+```
+
+#### Запуск по категориям:
+```bash
+# Только unit тесты (быстрые)
+make test-unit
+
+# Интеграционные тесты
+make test-integration
+
+# Тесты сервисов
+make test-services
+
+# Тесты API handlers
+make test-handlers
+
+# Тесты CLI команд
+make test-cli
+
+# Тесты схем валидации
+make test-schemas
+
+# Быстрые тесты (без медленных и интеграционных)
+make test-fast
+```
+
+#### Покрытие кода:
+```bash
+# Генерирует HTML отчет о покрытии
+make test
+# Отчет будет доступен в coverage_html/index.html
 ```
 
 ### 4. Линтинг
