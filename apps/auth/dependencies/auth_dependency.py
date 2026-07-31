@@ -7,7 +7,6 @@ from fastapi import HTTPException
 from fastapi.security import APIKeyCookie
 from fastapi.security import APIKeyHeader
 from loguru import logger
-from simple_print import sprint
 from starlette.responses import Response
 from starlette.status import HTTP_401_UNAUTHORIZED
 
@@ -74,7 +73,6 @@ class AuthDependency:
         elif cookie_token:
             token = cookie_token
         else:
-            sprint('Я тут')
             raise HTTPException(
                 status_code=HTTP_401_UNAUTHORIZED,
                 detail='Необходимо авторизоваться',
