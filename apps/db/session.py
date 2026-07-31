@@ -57,7 +57,6 @@ class PGEngineConnector:
             max_overflow=SETTINGS.ALCHEMY_OVERFLOW_POOL_SIZE,
             pool_pre_ping=True,
             json_serializer=lambda x: json.dumps(x) if not isinstance(x, str) else x,
-            # echo=True,
         )
         cls.engine_dict[sql_alchemy_uri] = engine
 

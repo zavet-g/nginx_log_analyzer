@@ -63,7 +63,6 @@ def include_name(name, type_, parent_names):
     для любого отраженного объекта базы данных на основе ero имени,
     включая имена схем баз данных
     https://alembic.sqlalchemy.org/en/latest/api/runtime.html
-    #alembic.runtime.environment.EnvironmentContext.configure.params.include_name.
 
     Args:
         name: имя объекта, например, имя схемы или имя таблицы.
@@ -98,7 +97,6 @@ def process_revision_directives(context, revision, directives):
     Args:
         context: это используемый MigrationContext
             https://alembic.sqlalchemy.org/en/latest/api/runtime.html
-            #alembic.runtime.migration.MigrationContext
         revision: кортеж идентификаторов ревизий, представляющих текущую
             ревизию базы данных
         directives: Параметр directives представляет собой список Python, содержащий
@@ -107,7 +105,6 @@ def process_revision_directives(context, revision, directives):
             можно свободно изменять для создания любого набора команд.
             B разделе Настройка генерации ревизий показан пример такой настройки.
             https://alembic.sqlalchemy.org/en/latest/api/autogenerate.html
-            #customizing-revision
     """
     if config.cmd_opts.autogenerate:
         script = directives[0]

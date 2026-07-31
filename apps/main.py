@@ -20,6 +20,7 @@ from apps.api import router as api_router
 from apps.auth import router as auth_router
 from apps.settings import SETTINGS
 from apps.utils.enums.env_enum import EnvEnum
+from apps.utils.health_check import health_check_router
 
 
 async def init_logger() -> None:
@@ -65,13 +66,13 @@ def get_fastapi_app() -> FastAPI:
     )
     fast_api_app.include_router(api_router)
     fast_api_app.include_router(auth_router)
-    
-    # Подключаем статические файлы
+    fast_api_app.include_router(health_check_router)
+
     try:
-        fast_api_app.mount("/static", StaticFiles(directory="apps/static"), name="static")
-    except Exception as e:
-        logger.warning(f"Не удалось подключить статические файлы: {e}")
-    
+        fast_api_app.mount('/static', StaticFiles(directory='apps/static'), name='static')
+    except RuntimeError:
+        logger.exception('Не удалось подключить статические файлы')
+
     return fast_api_app
 
 

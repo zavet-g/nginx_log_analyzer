@@ -1,8 +1,8 @@
 from fastapi import APIRouter
 
+from apps.api.v1.handlers import analytics_handler
 from apps.api.v1.handlers import log_entry_handler
 from apps.api.v1.handlers import server_handler
-from apps.api.v1.handlers import analytics_handler
 from apps.utils import health_check
 
 router = APIRouter()
