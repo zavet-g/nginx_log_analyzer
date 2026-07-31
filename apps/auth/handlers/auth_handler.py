@@ -7,6 +7,8 @@ from apps.auth.dependencies.auth_dependency import auth_dependency
 from apps.auth.schemas.user_schema import AuthSchema
 from apps.auth.schemas.user_schema import EncodedJWTTokenSchema
 from apps.auth.schemas.user_schema import UserSchema
+from apps.settings import SETTINGS
+from apps.utils.enums.env_enum import EnvEnum
 
 router = APIRouter()
 
@@ -19,20 +21,18 @@ async def login(
     """Авторизация пользователя. Ставим куки и возвращаем ответ."""
     encoded_jwt_token_schema = await auth_dependency.get_token(auth_data=auth_data)
 
-    response.set_cookie(
-        key='access_token',
-        value=encoded_jwt_token_schema.access_token,
-        samesite='none',
-        # secure=True,
-        # httponly=True,
-    )
-    response.set_cookie(
-        key='refresh_token',
-        value=encoded_jwt_token_schema.refresh_token,
-        samesite='none',
-        # secure=True,
-        # httponly=True,
-    )
+    secure = SETTINGS.ENVIRONMENT not in (EnvEnum.LOCAL, EnvEnum.PYTEST)
+    for key, value in (
+        ('access_token', encoded_jwt_token_schema.access_token),
+        ('refresh_token', encoded_jwt_token_schema.refresh_token),
+    ):
+        response.set_cookie(
+            key=key,
+            value=value,
+            samesite='lax',
+            secure=secure,
+            httponly=True,
+        )
     return encoded_jwt_token_schema
 
 

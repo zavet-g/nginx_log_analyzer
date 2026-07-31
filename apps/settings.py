@@ -4,7 +4,6 @@ from dotenv import find_dotenv
 from dotenv import load_dotenv
 from pydantic import AnyHttpUrl
 from pydantic import PostgresDsn
-# Удаляем импорт ValidationError, так как он не нужен
 from pydantic import model_validator
 from pydantic_settings import BaseSettings
 
@@ -58,19 +57,16 @@ class Settings(BaseSettings):
             data.update({'BACKEND_CORS_ORIGINS': backend_cors_origins})
         return data
 
-    # Общие настройки
     ENVIRONMENT: EnvEnum
     LOG_LEVEL: LogLevelEnum = LogLevelEnum.INFO
     BACKEND_CORS_ORIGINS: list[AnyHttpUrl] = []
-    PROJECT_NAME: str = 'base_fastapi'
+    PROJECT_NAME: str = 'nginx-log-analyzer'
 
-    # JWT
-    JWT_SECRET_KEY: str = 'dWrVziPa1VyvEFcYX1PAluU8cuICcaiH'
+    JWT_SECRET_KEY: str
     JWT_ALGORITHM: str = 'HS256'
     JWT_AUTH_HEADER_PREFIX: str = 'Bearer'
-    JWT_TOKEN_TTL: int = 30  # 5 min
+    JWT_TOKEN_TTL: int = 30
 
-    # База данных
     POSTGRES_HOST: str = 'localhost'
     POSTGRES_PORT: int | str = 5432
     POSTGRES_USER: str | None = 'user'
@@ -78,8 +74,8 @@ class Settings(BaseSettings):
     POSTGRES_DB: str | None = ''
     SQLALCHEMY_DATABASE_URI: str
     TEST_SQLALCHEMY_DATABASE_URI: str = ''
-    ALCHEMY_POLL_SIZE: int = 10  # Размер пула соединений алхимии
-    ALCHEMY_OVERFLOW_POOL_SIZE: int = 20  # Размер очереди соединений
+    ALCHEMY_POLL_SIZE: int = 10
+    ALCHEMY_OVERFLOW_POOL_SIZE: int = 20
 
 
 SETTINGS = Settings()
