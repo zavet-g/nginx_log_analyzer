@@ -12,6 +12,9 @@ from loguru import logger
 from apps.api.v1.models.log_entry_model import LogEntryModel
 from apps.db.session import connector
 
+POLL_INTERVAL_SECONDS = 1
+ERROR_BACKOFF_SECONDS = 5
+
 
 class NginxLogParser:
     """Парсер логов nginx в реальном времени."""
@@ -81,11 +84,11 @@ class NginxLogParser:
 
                     self.position = current_size
 
-                await asyncio.sleep(1)  # Проверяем каждую секунду
+                await asyncio.sleep(POLL_INTERVAL_SECONDS)
 
             except Exception:
                 logger.exception('Ошибка мониторинга логов')
-                await asyncio.sleep(5)  # Пауза при ошибке
+                await asyncio.sleep(ERROR_BACKOFF_SECONDS)
 
     async def save_log_entry(self, log_data: dict) -> None:
         """Сохраняет запись лога в базу данных."""
