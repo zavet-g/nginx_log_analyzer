@@ -1,32 +1,35 @@
-# syntax=docker.io/docker/dockerfile:1.7-labs
-FROM python:3.11-alpine AS base-image
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PIP_NO_CACHE_DIR=off \
-    POETRY_HOME="/usr/local/bin/poetry" \
-    POETRY_VIRTUALENVS_IN_PROJECT=true \
-    POETRY_NO_INTERACTION=1 \
-    POETRY_VERSION=2.0 \
-    PROJECT_PATH="/src"
-ENV PATH="$POETRY_HOME/bin:$PATH"
-RUN mkdir $PROJECT_PATH
-RUN apk --no-cache add curl gcc musl-dev libffi-dev
+FROM python:3.11-slim AS builder
 
-##############################################################
-# Образ для разработки
-FROM base-image AS dev
-ENV PRODUCTION=False
-COPY --exclude=poetry.lock --exclude=.venv ./ $PROJECT_PATH
-WORKDIR $PROJECT_PATH
-RUN pip install --no-cache-dir poetry=="$POETRY_VERSION" && poetry install
-CMD [".venv/bin/uvicorn", "app.main:app", "--reload", "--host", "0.0.0.0", "--port", "3000"]
-#CMD ["sleep", "350000"]
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy
 
-##############################################################
-# Образ для production: не ставятся dev зависимости, uvicorn запускается без hot reload
-FROM base-image AS prod
-ENV PRODUCTION=True
-COPY --exclude=poetry.lock --exclude=.venv ./ $PROJECT_PATH
-WORKDIR $PROJECT_PATH
-RUN pip install --no-cache-dir poetry=="$POETRY_VERSION" && poetry install 
-CMD [".venv/bin/uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "3000"]
+RUN pip install --no-cache-dir uv==0.5.*
+
+WORKDIR /app
+COPY pyproject.toml ./
+RUN uv venv /opt/venv && VIRTUAL_ENV=/opt/venv uv pip install --no-cache .
+
+FROM python:3.11-slim AS runtime
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH="/opt/venv/bin:$PATH"
+
+RUN useradd --create-home --uid 1000 app
+
+COPY --from=builder /opt/venv /opt/venv
+
+WORKDIR /app
+COPY --chown=app:app apps ./apps
+COPY --chown=app:app migrations ./migrations
+COPY --chown=app:app alembic.ini cli.py ./
+
+USER app
+EXPOSE 8000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"
+
+CMD ["uvicorn", "apps.main:app", "--host", "0.0.0.0", "--port", "8000"]
