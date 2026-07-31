@@ -37,7 +37,6 @@ class TestAuthHandler:
             client (AsyncClient): асинхронный клиент httpx
         """
 
-        # Не авторизованы
         response = await client.delete(
             f'{BASE_AUTH_URL}/logout',
         )
@@ -46,7 +45,6 @@ class TestAuthHandler:
         assert data == {'detail': 'Невозможно удалить токен, вы не авторизованы'}
         assert response.status_code == HTTP_401_UNAUTHORIZED
 
-        # Передали токен в хедере
         response = await client.delete(
             f'{BASE_AUTH_URL}/logout',
             headers={'refresh_token': 'SomeFakeToken'},
