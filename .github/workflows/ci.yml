@@ -70,7 +70,9 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: uv pip install --system ".[dev]"
+        run: |
+          uv venv
+          uv pip install ".[dev]"
 
       - name: Create test database
         env:
@@ -78,7 +80,7 @@ jobs:
         run: psql -h localhost -U postgres -c 'CREATE DATABASE test_nginx_log_analyzer;'
 
       - name: Run migrations
-        run: alembic upgrade head
+        run: uv run alembic upgrade head
 
       - name: Run tests
-        run: pytest -q --cov=apps --cov-config .coveragerc
+        run: uv run pytest -q --cov=apps --cov-config .coveragerc
