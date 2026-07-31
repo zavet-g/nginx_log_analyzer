@@ -33,7 +33,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install ruff
-        run: pip install --no-cache-dir ruff==0.8.4
+        run: pip install --no-cache-dir ruff==0.16.1
 
       - name: Ruff check
         run: ruff check apps tests migrations cli.py --output-format=github
