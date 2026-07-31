@@ -12,7 +12,7 @@ router = APIRouter()
 
 
 @router.get(
-    '/get_entry_logs',
+    '/log-entries',
     response_model=list[GetLogEntryOutSchema],
 )
 async def get_entry_logs(

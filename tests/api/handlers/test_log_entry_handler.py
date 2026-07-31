@@ -25,7 +25,7 @@ class TestGetEntryLogs:
         db_init_pre_build,
     ):
         response = await auth_client.get(
-            f'{BASE_API_URL}/get_entry_logs',
+            f'{BASE_API_URL}/log-entries',
         )
 
         assert response.status_code == HTTP_200_OK

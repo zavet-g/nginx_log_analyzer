@@ -13,7 +13,7 @@ router = APIRouter()
 
 
 @router.get(
-    '/get_servers',
+    '/servers',
     response_model=list[ServerOutSchema],
 )
 async def get_servers(
@@ -36,7 +36,7 @@ async def get_servers(
 
 
 @router.get(
-    '/get-server-by-id/{server_id}',
+    '/servers/{server_id}',
     response_model=ServerWithLogsOutSchema,
 )
 async def get_server_by_id(

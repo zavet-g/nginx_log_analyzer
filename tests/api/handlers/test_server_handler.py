@@ -26,7 +26,7 @@ class TestGetServers:
         db_init_pre_build,
     ):
         response = await auth_client.get(
-            f'{BASE_API_URL}/get_servers',
+            f'{BASE_API_URL}/servers',
         )
         assert response.status_code == HTTP_200_OK
 
@@ -45,12 +45,12 @@ class TestGetServerById:
 
     """
 
-    async def test_get_servers(
+    async def test_get_server_by_id(
         self,
         auth_client,
         db_init_pre_build,
     ):
         response = await auth_client.get(
-            f'{BASE_API_URL}/get-server-by-id/2',
+            f'{BASE_API_URL}/servers/2',
         )
         assert response.status_code == HTTP_200_OK
